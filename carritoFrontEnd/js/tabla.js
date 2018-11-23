@@ -1,8 +1,8 @@
 
 firebase.initializeApp({
-    apiKey: "AIzaSyDS65jP2B89qAA81-BGNxP1NcQKao5Q8bI",
-    authDomain: "testcarritofrontend.firebaseapp.com",
-    projectId: "testcarritofrontend"
+    apiKey: "AIzaSyCsahZNj7tHGCspHfRxVvUyxc1YFzUAjKs",
+    authDomain: "testcarrito-fad44.firebaseapp.com",
+    projectId: "testcarrito-fad44"
   });
 
   // Initialize Cloud Firestore through Firebase
@@ -10,6 +10,7 @@ var db = firebase.firestore();
 //lista de productos
 
 var producto = [];
+var total = 0;
 //clase producto
 class Producto{
     constructor(id, nombre, precio){
@@ -44,6 +45,17 @@ function sumarCantidad(p){
         }
     }
 }
+
+function restarCantidad(id){
+    //console.log("en la funcion restar cantidad");
+   // console.log("ID DEL PRODUCTO: "+ id);
+    for(var i=0; i< producto.length;i++){
+        if(producto[i].id == id){
+            producto[i].cantidad --;
+            break;
+        }
+    }
+}
 //con esto cargamos la tabla de los productos disponibles
 var tabla = document.getElementById("tabla");
 db.collection("productos").onSnapshot((querySnapshot) => {
@@ -60,6 +72,52 @@ db.collection("productos").onSnapshot((querySnapshot) => {
         `
   });
 });
+
+function calcularTotal(){
+    total = 0;
+    producto.forEach(function(element){
+        total = total + element.precio * element.cantidad;
+    });
+}
+
+//funcion que recibe un el id del producto para poder ubicarlo en el array y descontarle 1 de la cantidad
+function eliminar(id){
+    var tabla = document.getElementById("tablaCarrito");
+    
+    //console.log("estoy en la funcion eliminar, id del producto: "+ id);
+    //for que verifica el id que recibe por parametro con todos los elementos del array de productos, si es igual el id llama a la funcion restar cantidad que recibe el id y le resta la cantidad
+    for(var i = 0; i < producto.length; i++){
+        if(producto[i].id == id){
+            console.log("Se elimino 1 de la cantidad");
+            restarCantidad(id);
+            break;
+        }
+    }
+
+    //producto.forEach(function(element){
+     //   console.log(element);
+    //});
+    //console.log("despues de bajar el stock");
+
+    tabla.innerHTML = "";
+    //console.log(jsonArray.length);
+    //for que llena la tabla con el id: tablaCarrito
+    
+        for(var i = 0; i< producto.length; i++){
+            //si la cantidad del producto es mayor a 0 lo muestra, sino lo elimina del array
+            if(producto[i].cantidad == 0 ){
+                producto.splice(i, 1);
+                cargarTablaConArray(tabla);
+                calcularTotal();
+                document.getElementById("total").innerHTML = total +"$";
+            }else{
+                cargarTablaConArray(tabla);
+                calcularTotal();
+                document.getElementById("total").innerHTML = total +"$";
+            }
+      
+        }
+}
 //funcion para agregar el producto al carrito.
 function agregar(id, nombre, precio){
   var tabla = document.getElementById("tablaCarrito");
@@ -84,38 +142,41 @@ function agregar(id, nombre, precio){
             }
         }
     }
-
-    
-    
-  //onsole.log(JSON.stringify(producto));
+  //console.log(JSON.stringify(producto));
   //for para ver lo que va cargando el array
-  producto.forEach(function(element){
-      console.log(element);
-  });
+  //.forEach(function(element){
+   //   console.log(element);
+  //});
     //console.log(producto.length);
     //paso el array a un json
     var jsonArray = JSON.stringify(producto);
-    
+    cargarTablaConArray(tabla);
+    calcularTotal();
+    document.getElementById("total").innerHTML = total + "$";
+}
+//funcion que carga la tabla con el array, recibe la tabla a la que quiere cargar los elementos
+function cargarTablaConArray(tabla){
     tabla.innerHTML = "";
     //console.log(jsonArray.length);
     //for que llena la tabla con el id: tablaCarrito
     for(var i = 0; i< producto.length; i++){
         var row = tabla.insertRow(i);
         var idCell = row.insertCell(0),
-            nameCell = row.insertCell(1),
-            precioCell = row.insertCell(2),
-            cantidadCell =  row.insertCell(3);
-        idCell.innerHTML = producto[i].id;
-        nameCell.innerHTML = producto[i].nombre;
-        precioCell.innerHTML = producto[i].precio;
-        cantidadCell.innerHTML = producto[i].cantidad;
-
-        tabla.appendChild(row);
+         nameCell = row.insertCell(1),
+         precioCell = row.insertCell(2),
+         cantidadCell =  row.insertCell(3),
+         btnEliminar = row.insertCell(4);
+            try {
+                idCell.innerHTML = producto[i].id;
+                nameCell.innerHTML = producto[i].nombre;
+                precioCell.innerHTML = producto[i].precio;
+                cantidadCell.innerHTML = producto[i].cantidad;
+                btnEliminar.innerHTML = `<td><button class="btn btn-danger" onclick="eliminar('${producto[i].id}')">Eliminar</button></td>`;
+            } catch (error) {
+                console.log("Error: " + error);
+            }    
+         tabla.appendChild(row);
     }
-   
 }
-
-
-
 
 
